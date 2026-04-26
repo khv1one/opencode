@@ -1,7 +1,159 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "manager",
+  "logLevel": "INFO",
+  "model": "openrouter/moonshotai/kimi-k2.6",
+  "small_model": "openrouter/google/gemini-3.1-flash-lite-preview",
+  "autoupdate": "notify",
+  "snapshot": true,
+  "enabled_providers": [
+    "opencode",
+    "openrouter"
+  ],
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "command": {
+    "review": {
+      "template": "Review the current code for issues (races, leaks, arch violations). Agent: @reviewer",
+      "description": "Code review with reviewer agent",
+      "agent": "reviewer"
+    },
+    "plan": {
+      "template": "Plan implementation for the current task. Agent: @goplan",
+      "description": "Plan Go implementation with goplan agent",
+      "agent": "goplan"
+    },
+    "test": {
+      "template": "Write and validate tests. Agent: @tester",
+      "description": "Write tests and fuzzing with tester agent",
+      "agent": "tester"
+    },
+    "arch": {
+      "template": "Design architecture for the current feature. Agent: @architect",
+      "description": "Architectural design with architect agent",
+      "agent": "architect"
+    },
+    "explore": {
+      "template": "Explore codebase context. Agent: @explore",
+      "description": "Explore codebase with explore agent",
+      "agent": "explore"
+    }
+  },
+  "mode": {
+    "manager": {
+      "description": "Orchestrates workflow, manages MCP, delegates tasks. NEVER executes work.",
+      "mode": "primary",
+      "color": "#6366F1",
+      "steps": 50
+    },
+    "explore": {
+      "description": "Fast context gathering via MCP context7, glob, and grep.",
+      "mode": "subagent",
+      "hidden": true,
+      "color": "#22D3EE",
+      "steps": 30
+    },
+    "architect": {
+      "description": "System design, ADRs, bounded contexts.",
+      "mode": "subagent",
+      "color": "#A78BFA",
+      "steps": 40
+    },
+    "goplan": {
+      "description": "Plans Go implementation with long-context retention.",
+      "mode": "subagent",
+      "hidden": true,
+      "color": "#22D3EE",
+      "steps": 50
+    },
+    "godev": {
+      "description": "Writes idiomatic Go code, SOTA Go 1.26+ generation.",
+      "mode": "subagent",
+      "color": "#34D399",
+      "steps": 100
+    },
+    "tester": {
+      "description": "Validates godev tests, writes fuzzing/benchmarks.",
+      "mode": "subagent",
+      "hidden": true,
+      "color": "#F472B6",
+      "steps": 60
+    },
+    "reviewer": {
+      "description": "Audits code before merge (races, leaks, arch).",
+      "mode": "subagent",
+      "hidden": true,
+      "color": "#FBBF24",
+      "steps": 40
+    },
+    "dbdev": {
+      "description": "DB schema, queries, migrations (PG/ClickHouse).",
+      "mode": "subagent",
+      "hidden": true,
+      "color": "#A78BFA",
+      "steps": 40
+    },
+    "docs": {
+      "description": "API contracts, README, godoc, ADR prose.",
+      "mode": "subagent",
+      "hidden": true,
+      "color": "#A78BFA",
+      "steps": 50
+    }
+  },
+  "watcher": {
+    "ignore": [
+      ".git/**",
+      "node_modules/**",
+      "vendor/**",
+      "tmp/**",
+      "*.log",
+      ".idea/**",
+      ".vscode/**",
+      "dist/**",
+      "build/**",
+      ".DS_Store",
+      "*.tmp",
+      "*.swp",
+      "*.swo",
+      ".env*",
+      "coverage/**"
+    ]
+  },
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
+    "serena": {
+      "type": "local",
+      "command": ["uvx", "--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"],
+      "enabled": true
+    },
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "enabled": true
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true
+    }
+  },
+  "lsp": {
+    "gopls": {
+      "command": ["gopls"],
+      "extensions": [".go"]
+    }
+  },
   "permission": {
+    "skill": {
+      "*": "allow"
+    },
     "*": "allow",
     "bash": {
       "*": "allow",
@@ -47,6 +199,14 @@
       "killall *": "ask"
     },
     "doom_loop": "ask",
-    "external_directory": "ask"
-  }
+    "external_directory": "ask",
+    "todoread": "allow",
+    "todowrite": "allow"
+  },
+  "plugin": [
+    "@nick-vi/opencode-type-inject@latest",
+    "opencode-with-claude@latest",
+    "opencode-historian@latest"
+  ],
+  "share": "manual"
 }
